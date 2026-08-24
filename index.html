@@ -1,0 +1,1105 @@
+<title>SR Biotek 하반기 목표 대시보드 (간편판)</title>
+<style>
+:root{
+  --ink:#1B1A2E; --ink-2:#4A4763; --ink-3:#73708A;
+  --ground:#F6F5FA; --surface:#FFFFFF; --surface-2:#FBFAFE;
+  --line:#CDCADE; --line-2:#B9B5CE; --tick:#857DAB;
+  --accent:#5B4BC4; --on-accent:#FFFFFF; --accent-soft:#EDEAFB;
+  --gangnam:#7C6BD9; --seongnam:#C4703A; --gwanggyo:#2F8F6B;
+  --good:#2C7A57; --good-bg:#E3F2EA;
+  --warn:#865F0C; --warn-bg:#FBF1D8;
+  --crit:#B33C36; --crit-bg:#FBE5E3;
+  --idle:#9A97AD; --idle-bg:#EDECF2;
+  --track:#E7E5F0;
+  --band-bad:#F0CDCC; --band-ok:#F0E4CC; --band-good:#EBF9F3;
+  --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a;   /* dataviz 검증 통과 (blue/orange/aqua) */
+  /* 영업이익은 매출의 4번째 범주가 아니라 다른 측정치다. 범주 색을 쓰면 동급으로
+     읽히고 palette 4~8번 슬롯은 주황·아쿠아와 ΔE 가 부족해 실제로 구별되지 않는다.
+     중립 잉크 + 점선 + 우측 축으로 '참조 계열'임을 드러낸다. 대비 8.9:1. */
+  --series-profit:#4A4763;
+  --chart-grid:#e1e0d9; --chart-axis:#c3c2b7;
+  --scrim:rgba(20,18,38,.55);
+  --shadow:0 1px 2px rgba(27,26,46,.05), 0 8px 24px -12px rgba(27,26,46,.14);
+  --shadow-lg:0 24px 60px -20px rgba(27,26,46,.42);
+  --mono:"Cascadia Mono",Consolas,"SF Mono",ui-monospace,monospace;
+  --sans:"Pretendard","Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",
+         -apple-system,system-ui,"Segoe UI",sans-serif;
+  --bar:88px;          /* 인라인 진도율 바 — 전 계층 동일 폭 */
+  --val:54px;          /* 진도율 숫자 칸 — 전 계층 동일 폭 */
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ink:#EFEDF7; --ink-2:#B4B0C8; --ink-3:#8A85A4;
+  --ground:#12111F; --surface:#1C1A2E; --surface-2:#221F38;
+  --line:#403B5E; --line-2:#4E4870; --tick:#776FA3;
+  --accent:#A99BF5; --on-accent:#17142B; --accent-soft:#2A2547;
+  --gangnam:#9C8DEB; --seongnam:#DE9257; --gwanggyo:#4FB88C;
+  --good:#6ED3A3; --good-bg:#1B3A2C;
+  --warn:#E5BA55; --warn-bg:#3A3018;
+  --crit:#F09189; --crit-bg:#3D1F1D;
+  --idle:#7C7894; --idle-bg:#272338;
+  --track:#2C2844;
+  --band-bad:#2B1917; --band-ok:#322B1B; --band-good:#12211A;
+  --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+  --series-profit:#B4B0C8;
+  --chart-grid:#2c2c2a; --chart-axis:#383835;
+  --scrim:rgba(0,0,0,.66);
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+  --shadow-lg:0 24px 60px -20px rgba(0,0,0,.8);
+}}
+:root[data-theme="dark"]{
+  --ink:#EFEDF7; --ink-2:#B4B0C8; --ink-3:#8A85A4;
+  --ground:#12111F; --surface:#1C1A2E; --surface-2:#221F38;
+  --line:#403B5E; --line-2:#4E4870; --tick:#776FA3;
+  --accent:#A99BF5; --on-accent:#17142B; --accent-soft:#2A2547;
+  --gangnam:#9C8DEB; --seongnam:#DE9257; --gwanggyo:#4FB88C;
+  --good:#6ED3A3; --good-bg:#1B3A2C;
+  --warn:#E5BA55; --warn-bg:#3A3018;
+  --crit:#F09189; --crit-bg:#3D1F1D;
+  --idle:#7C7894; --idle-bg:#272338;
+  --track:#2C2844;
+  --band-bad:#2B1917; --band-ok:#322B1B; --band-good:#12211A;
+  --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+  --series-profit:#B4B0C8;
+  --chart-grid:#2c2c2a; --chart-axis:#383835;
+  --scrim:rgba(0,0,0,.66);
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+  --shadow-lg:0 24px 60px -20px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px;margin:0 auto;padding:26px 22px 90px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+
+/* ---------- header ---------- */
+header{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;
+  justify-content:space-between;padding-bottom:18px;border-bottom:1px solid var(--line)}
+h1{margin:4px 0 2px;font-size:23px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--ink-2);font-size:12.5px}
+.srcbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.srlabel{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+input[type=text]{font:inherit;font-size:12.5px;padding:9px 10px;min-height:40px;
+  width:260px;max-width:100%;border:1px solid var(--line-2);border-radius:7px;
+  background:var(--surface);color:var(--ink)}
+input[type=text]::placeholder{color:var(--ink-3)}
+button{font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:9px 14px;
+  min-height:40px;border-radius:7px;border:1px solid var(--line-2);
+  background:var(--surface);color:var(--ink);
+  transition:border-color .16s ease,color .16s ease,filter .16s ease,background-color .16s ease}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button.primary:hover{filter:brightness(1.08);color:var(--on-accent)}
+button[disabled]{opacity:.5;cursor:not-allowed}
+button[disabled]:hover{border-color:var(--line-2);color:var(--ink)}
+#themeBtn{min-width:40px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.srcstate{font-size:11.5px;color:var(--ink-3);display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--idle);flex:none}
+.dot.live{background:var(--good)} .dot.err{background:var(--crit)}
+.dot.busy{background:var(--accent);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ---------- 전사 요약 ---------- */
+.total{display:grid;gap:14px;margin:20px 0 22px;
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow);padding:17px 20px 15px}
+.stat.hero{border-color:var(--accent)}
+.stat .st{display:flex;gap:10px;align-items:baseline;justify-content:space-between}
+.stat .big{font-size:40px;font-weight:800;letter-spacing:-.04em;line-height:1.05}
+.stat .big small{font-size:16px;font-weight:600;margin-left:2px;color:var(--ink-2)}
+.stat .goal{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:12px;color:var(--ink-3);text-align:right;line-height:1.5}
+.stat .goal b{display:block;font-size:14px;font-weight:700;color:var(--ink-2)}
+.stat .cap{font-size:11.5px;color:var(--ink-3);margin-top:7px}
+.stat .gwrap{margin-top:11px}
+.scale{display:flex;gap:13px;flex-wrap:wrap;margin-top:10px;font-size:10.5px;color:var(--ink-3)}
+.scale i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;
+  vertical-align:-1px;border:1px solid var(--line)}
+.scale .tickleg i{width:2px;height:11px;border:0;background:var(--tick);border-radius:1px}
+
+/* ---------- 불릿 게이지 ---------- */
+.gauge{position:relative;height:10px;border-radius:99px;overflow:hidden;background:var(--track)}
+.gauge>u{position:absolute;top:0;bottom:0;display:block}
+.gauge>u.b1{left:0;width:58.333%;background:var(--band-bad)}
+.gauge>u.b2{left:58.333%;width:16.667%;background:var(--band-ok)}
+.gauge>u.b3{left:75%;right:0;background:var(--band-good)}
+.gauge>i{position:absolute;top:2px;bottom:2px;left:0;border-radius:99px;display:block}
+.gauge>b{position:absolute;top:0;bottom:0;left:83.333%;width:2px;background:var(--tick)}
+.gauge.sm{height:7px}
+.gauge.sm>i{top:1.5px;bottom:1.5px}
+.gauge.sm>u{display:none}   /* 인라인 바는 비교용 스파크라인 — 구간 밴드는 요약에만 */
+.fill-good{background:var(--good)} .fill-warn{background:var(--warn)}
+.fill-crit{background:var(--crit)} .fill-idle{background:var(--idle)}
+
+/* ---------- 툴바 ---------- */
+.toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;margin:0 0 12px}
+.tbinfo{font-size:12px;color:var(--ink-3)}
+.toolbar button{min-height:34px;padding:7px 13px;font-size:12px}
+
+/* ---------- 매출 추이 차트 ---------- */
+.chartcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow);padding:17px 20px 14px;margin:0 0 22px}
+.chartcard .chd{display:flex;justify-content:space-between;align-items:baseline;
+  flex-wrap:wrap;gap:10px;margin-bottom:4px}
+.chartcard h2{font-size:13px;font-weight:800;margin:0;letter-spacing:-.01em}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2)}
+.legend .key{display:inline-flex;align-items:center;gap:6px}
+.legend .swatch{width:14px;height:2px;border-radius:1px;display:inline-block}
+.chartwrap{overflow-x:auto}
+.linechart{width:100%;height:auto;min-width:420px}
+.linechart .grid{stroke:var(--chart-grid);stroke-width:1}
+.linechart .axis{stroke:var(--chart-axis);stroke-width:1}
+.linechart .tick{font-size:10.5px;fill:var(--ink-3)}
+.linechart .line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.linechart .line.dash{stroke-dasharray:5 4;stroke-width:1.8}
+.linechart .tick.lower{fill:var(--series-profit)}
+.linechart .bandlab{font-size:10.5px;font-weight:700;fill:var(--series-profit)}
+.legend .swatch.dash{height:0;border-top:2px dashed currentColor;background:none!important;
+  border-radius:0;width:16px;align-self:center}
+.legend .axnote{color:var(--ink-3);font-size:10.5px;margin-left:3px}
+.linechart .dot{stroke:var(--surface);stroke-width:2}
+.linechart .hit{fill:transparent;cursor:crosshair}
+.linechart .crosshair{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:3 3;
+  opacity:0;pointer-events:none}
+.charttip{position:absolute;pointer-events:none;background:var(--surface);
+  border:1px solid var(--line-2);border-radius:8px;box-shadow:var(--shadow-lg);
+  padding:8px 10px;font-size:11.5px;opacity:0;transition:opacity .1s ease;
+  min-width:120px;z-index:5}
+.charttip .tt-x{font-weight:700;margin-bottom:4px;color:var(--ink)}
+.charttip .tt-row{display:flex;align-items:center;gap:6px;justify-content:space-between}
+.charttip .tt-key{display:flex;align-items:center;gap:5px;color:var(--ink-2)}
+.charttip .tt-line{width:10px;height:2px;border-radius:1px;display:inline-block}
+.charttip .tt-val{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-weight:700;color:var(--ink)}
+.chartcap{font-size:11px;color:var(--ink-3);margin-top:6px}
+
+/* ---------- 캠퍼스 3열 ---------- */
+.campuses{display:grid;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
+.col{display:flex;flex-direction:column;gap:11px;min-width:0}
+.chead{display:grid;grid-template-columns:14px 1fr var(--val) var(--bar);gap:10px;
+  align-items:center;padding:11px 15px;border-radius:11px;
+  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.chead .cn{font-size:13px;font-weight:800;letter-spacing:.02em}
+.chead .cs{font-size:11px;color:var(--ink-3);display:block;font-weight:400;letter-spacing:0}
+.chead .cv{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:15px;font-weight:800;text-align:right}
+
+/* ---------- 팀 카드 ---------- */
+.tblock{background:var(--surface);border:1px solid var(--line);border-radius:11px;
+  box-shadow:var(--shadow);overflow:hidden}
+.thead{display:grid;grid-template-columns:14px 1fr var(--val) var(--bar);gap:10px;
+  align-items:center;padding:11px 15px;background:var(--surface-2);
+  border:0;border-bottom:1px solid var(--line);border-radius:0;
+  width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:auto;
+  transition:background-color .16s ease}
+.thead:hover{background:var(--accent-soft)}
+.thead .caret{color:var(--ink-3);font-size:10px;line-height:1}
+.tflags{grid-column:2/-1}
+.tblock.collapsed .thead{border-bottom:0}
+.tname{font-size:14.5px;font-weight:750;letter-spacing:-.01em}
+.tmeta{font-size:11px;color:var(--ink-3);display:block}
+.tv{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:15px;font-weight:800;text-align:right}
+.tflags{grid-column:1/-1;margin-top:2px}
+
+.chip{display:inline-block;font-size:10px;font-weight:650;padding:2px 6px;
+  border-radius:5px;margin:1px 3px 1px 0;white-space:nowrap}
+.chip.good{background:var(--good-bg);color:var(--good)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.crit{background:var(--crit-bg);color:var(--crit)}
+.chip.idle{background:var(--idle-bg);color:var(--ink-2)}
+.chip.acc{background:var(--accent-soft);color:var(--accent)}
+.chip.who{background:var(--accent-soft);color:var(--accent);font-weight:700}
+
+.secrow{padding:7px 15px 5px;font-size:10.5px;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent);border-bottom:1px solid var(--line);
+  background:var(--surface-2)}
+
+/* ---------- KPI 행 ---------- */
+.krow{display:grid;grid-template-columns:1fr var(--val) var(--bar);gap:10px;
+  grid-template-areas:"name val bar" "sub val bar";
+  align-items:center;padding:9px 15px;min-height:44px;width:100%;
+  background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;
+  text-align:left;font:inherit;color:inherit;cursor:pointer;
+  transition:background-color .16s ease}
+.krow:hover{background:var(--accent-soft)}
+.krow:last-child{border-bottom:0}
+.krow.dup{background:var(--accent-soft)}
+.kn{grid-area:name;font-weight:650;font-size:13px;line-height:1.35}
+.ksub{grid-area:sub;font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:11px;color:var(--ink-3);margin-top:2px}
+.ksub .act{font-weight:700;color:var(--ink-2)}
+.ksub .arrow{margin:0 4px}
+.kv{grid-area:val;font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:12.5px;font-weight:700;text-align:right;align-self:center}
+.kg{grid-area:bar;align-self:center}
+.emptyteam{padding:16px 15px;color:var(--ink-3);font-size:12px}
+
+/* ---------- 플로팅 패널 (여러 개 동시 · 드래그 이동) ---------- */
+#panels{position:fixed;inset:0;pointer-events:none;z-index:60}
+.panel{position:absolute;width:min(430px,calc(100vw - 28px));pointer-events:auto;
+  background:var(--surface);color:var(--ink);border:1px solid var(--line-2);
+  border-radius:13px;box-shadow:var(--shadow-lg);overflow:hidden;
+  display:flex;flex-direction:column;max-height:min(78vh,660px)}
+.panel.front{border-color:var(--accent)}
+.mhead{display:flex;gap:10px;align-items:flex-start;padding:13px 14px 11px;
+  border-bottom:1px solid var(--line);background:var(--surface-2);
+  cursor:grab;touch-action:none;user-select:none}
+.mhead:active{cursor:grabbing}
+.grip{flex:none;width:12px;align-self:stretch;margin:1px 0;border-radius:2px;
+  background:repeating-linear-gradient(var(--line-2) 0 2px,transparent 2px 4px)}
+.pcount{font-size:11.5px;color:var(--ink-3);margin-left:8px}
+.closeall{margin-left:8px;padding:5px 10px;min-height:30px;font-size:11.5px}
+.mhead .mt{flex:1;min-width:0}
+.mkicker{font-size:11px;color:var(--ink-3);margin-bottom:3px}
+.mtitle{font-size:15.5px;font-weight:750;letter-spacing:-.015em;line-height:1.35;margin:0}
+.mclose{flex:none;width:32px;height:32px;min-height:32px;padding:0;border-radius:8px;
+  font-size:14px;line-height:1;color:var(--ink-2);cursor:pointer}
+.mbody{padding:14px 16px 18px;overflow-y:auto;flex:1}
+.mrate{display:flex;gap:14px;align-items:center;margin-bottom:16px}
+.mrate .mv{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:26px;font-weight:800;letter-spacing:-.03em;min-width:84px}
+.mrate .mg{flex:1;min-width:120px}
+.mfacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin:0 0 4px}
+.fact{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.fact dt{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:3px}
+.fact dd{margin:0;font-size:13px;font-weight:650;font-variant-numeric:tabular-nums}
+.msec{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);margin:18px 0 7px}
+.mwhy{font-size:13px;color:var(--ink-2);padding-left:11px;border-left:2px solid var(--accent)}
+.formula{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);background:var(--ground);
+  border:1px solid var(--line);border-radius:7px;padding:8px 11px;
+  overflow-x:auto;white-space:nowrap}
+.persons{display:flex;flex-direction:column;gap:7px}
+.prow{display:grid;gap:10px;align-items:center;
+  grid-template-columns:60px 1fr 42px var(--bar);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.prow .pnm{font-weight:650;font-size:12.5px}
+.prow .pwhy{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.prow .pv{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:12px;font-weight:700;text-align:right}
+.nolink{font-size:12.5px;color:var(--crit)}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
+  font-size:11.5px;color:var(--ink-3);display:flex;gap:18px;flex-wrap:wrap}
+
+@media (max-width:1080px){ .campuses{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:720px){
+  .campuses{grid-template-columns:1fr}
+  .panel{width:calc(100vw - 20px);max-height:74vh}
+  .mhead{cursor:default}
+  .wrap{padding:16px 13px 60px}
+  .srcbox{width:100%}
+  .srcbox input[type=text]{flex:1 1 100%}
+  button{min-height:44px} #themeBtn{min-width:44px}
+  .total{padding:16px} .total .big{font-size:42px}
+  .prow{grid-template-columns:60px 1fr}
+  .prow .pw,.prow .pv{display:none}
+}
+@media (max-width:400px){ :root{--bar:64px;--val:48px} h1{font-size:20px} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <div>
+    <div class="eyebrow">SR Biotek · 팀 목표 · 개인 목표 연동</div>
+    <h1>26년 하반기 목표 대시보드</h1>
+    <div class="sub" id="periodLine"></div>
+  </div>
+  <div class="srcbox">
+    <label for="sheetUrl" class="srlabel">구글시트 주소</label>
+    <input type="text" id="sheetUrl" placeholder="구글시트 URL 또는 ID 붙여넣기">
+    <button class="primary" id="loadBtn" type="button">시트에서 불러오기</button>
+    <button id="themeBtn" type="button" aria-label="라이트·다크 모드 전환" title="라이트·다크 전환">◐</button>
+    <div class="srcstate"><span class="dot" id="srcDot"></span><span id="srcText">샘플 데이터</span></div>
+  </div>
+</header>
+
+<section class="total" id="total"></section>
+<section class="chartcard" id="revChart"></section>
+<div class="toolbar">
+  <span class="tbinfo" id="tbInfo"></span>
+  <button id="foldBtn" type="button">전체 펼치기</button>
+</div>
+<div class="campuses" id="view"></div>
+
+<footer>
+  <span>달성률은 각 팀장이 매월 직접 계산해 시트에 입력합니다 — 이 대시보드는 조회 전용입니다</span>
+  <span id="panelInfo"></span>
+  <span id="asOf"></span>
+</footer>
+</div>
+
+<div id="panels" aria-live="polite"></div>
+
+<script>
+const DATA = {"period":"2026-07-01 ~ 2026-12-31","asOf":"","headline":["전사 매출 합계","IDENEL 매출","전사 영업이익 합계"],"teams":[{"team":"인사","campus":"강남","lead":"김석원 과장","n":2,"rate":null},{"team":"재무","campus":"강남","lead":"고대진 부장","n":2,"rate":null},{"team":"품질","campus":"성남","lead":"정언식 차장","n":3,"rate":null}],"rows":[],"company":[{"name":"OEM 매출","unit":"백만원","annual":36000,"actual":22704,"rate":63.1,"monthly":[1617,1417,3339,4226,3159,5226,3720,null,null,null,null,null]},{"name":"IDENEL 매출","unit":"백만원","annual":8500,"actual":2396,"rate":28.2,"monthly":[218,297,395,337,204,442,503,null,null,null,null,null]},{"name":"전사 매출 합계","unit":"백만원","annual":44500,"actual":25100,"rate":56.4,"total":true,"monthly":[1835,1714,3734,4563,3363,5668,4223,null,null,null,null,null]},{"name":"전사 영업이익 합계","unit":"백만원","annual":8900,"actual":3646,"rate":41.0,"total":true,"monthly":[270,291,533,572,415,943,622,null,null,null,null,null]}]};
+/* 실제 서비스 배포 시 여기에 구글시트 ID(또는 URL)를 넣으면 방문자가 매번 붙여넣지 않고
+   자동으로 최신 데이터를 불러온다. 비워두면 샘플 데이터로 열린다. */
+const DEFAULT_SHEET_ID = "1JrnjSuuOXpZKII56Pf9zmmtdHdIjlM-L";
+/* 기존 대시보드와 키를 분리한다. 둘을 같은 오리진(예: GitHub Pages)에 올리면
+   같은 localStorage 를 공유해 서로의 시트 ID 를 덮어쓴다. 스키마가 달라
+   상대의 ID 를 물려받으면 원인을 알기 어려운 실패가 난다. */
+const LS_KEY = "sr_goal_manual_sheet";
+const CAMPUS_ORDER = ["강남","성남","광교"];
+const CAMPUS_VAR = {"강남":"--gangnam","성남":"--seongnam","광교":"--gwanggyo"};
+/* 최상단 카드 제목 — 시트의 지표명을 그대로 쓰면 길어지는 것만 다듬는다 */
+const HEADLINE_LABEL = {
+  "전사 매출 합계": "전사 매출",
+  "IDENEL 매출": "IDENEL 누적 매출",
+  "OEM 매출": "OEM 누적 매출",
+  "전사 영업이익 합계": "전사 영업이익",
+};
+const TYPE_LABEL = {R:"비율 달성형",L:"구간 환산형",C:"건수 누적형",
+                    D:"일정 준수형",M:"마일스톤형"};
+let state = {data:DATA, collapsed:new Set(), panels:new Map(), z:60, cascade:0};
+/* 팀 목록이 길어 기본은 접힘으로 둔다. 팀 이름·진도율만 훑고 필요한 팀만 펼친다. */
+const collapseAll = () => { state.collapsed = new Set(state.data.teams.map(t=>t.team)); };
+const expandAll   = () => { state.collapsed.clear(); };
+collapseAll();
+
+/* ---------- 가드레일 판정 ----------
+   체크박스는 경로에 따라 표기가 흔들린다. 주입 JSON 은 boolean, 구글시트 CSV 는
+   "TRUE"/"FALSE" 문자열 또는 빈칸으로 온다. 값의 "형태"를 가정하지 않는다.
+
+   ⚠ 절대 if(r.guard) 로 판정하면 안 된다. 체크 해제가 "FALSE" 문자열로 오면
+   JS 에서 truthy 라 전 행이 가드레일이 되고, 모든 팀 진도율이 0% 로 붕괴한다. */
+const GUARD_TRUE = new Set(["true","1","y","yes","예","o","v","체크","가드레일","필수"]);
+function isGuard(r){
+  const v = r && r.guard;
+  if(v === true) return true;
+  if(v === false || v === null || v === undefined) return false;
+  if(v === 1) return true;
+  return GUARD_TRUE.has(String(v).trim().toLowerCase());
+}
+
+/* ---------- 진도율: 시트 수식과 동일한 분기 ---------- */
+function rateOf(r, actualOverride){
+  const a = actualOverride!==undefined ? actualOverride : r.actual;
+  const num = v => (v===null||v===undefined||v==="") ? null : Number(v);
+  const cl = v => Math.max(0, Math.min(120, v));
+  /* 가드레일은 측정유형보다 먼저 판정한다 — 가드레일 행은 측정유형이 비어 있다.
+     결과는 차감분(음수)이므로 0~120 클램프를 적용하지 않는다. */
+  if(isGuard(r)){ if(a===null||a===undefined) return null;
+    return -Math.max(0, num(a)-(num(r.allow)??0)) * (num(r.ded)??0); }
+  const t=r.type; if(!t) return null;
+  if(t==="D"){ if(!r.done||!r.due) return null;
+    const d=Math.max(0,(new Date(r.done)-new Date(r.due))/864e5);
+    return cl(100 - d*(num(r.ded)??0)); }
+  if(t==="M"){ if(r.done===null||r.done===undefined) return null; return cl(num(r.done)); }
+  const tg=num(r.target), ac=num(a);
+  if(ac===null||tg===null) return null;
+  if(t==="L"){ const lo=num(r.low);
+    if(lo===null) return "하한필요";
+    if(tg===lo) return "산식확인";
+    return cl((ac-lo)/(tg-lo)*100); }
+  if(tg===0) return "산식확인";
+  return cl(ac/tg*100);
+}
+const numRate = v => typeof v==="number" ? v : null;
+
+function fmt(n){
+  if(n===null||n===undefined||n==="") return "·";
+  if(typeof n!=="number") return String(n);
+  const ab=Math.abs(n);
+  if(ab>=1e8) return (n/1e8).toFixed(ab>=1e9?1:2).replace(/\.?0+$/,"")+"억";
+  if(ab>=1e4) return n.toLocaleString("ko-KR");
+  return (Math.round(n*100)/100).toLocaleString("ko-KR");
+}
+const pct = v => v===null ? "—" : (Math.round(v*10)/10).toFixed(1)+"%";
+const band = v => v===null ? "idle" : v>=90?"good":v>=70?"warn":"crit";
+const BAND_KO = {good:"양호", warn:"보통", crit:"미흡", idle:"미기재"};
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const col = b => b==="idle" ? "var(--ink-3)" : `var(--${b})`;
+
+/* 목표가 무엇이었는지 리마인드하는 한 줄 */
+function targetLine(r){
+  const u = r.unit ? " "+esc(r.unit) : "";
+  if(isGuard(r))
+    return `허용 ${fmt(r.allow)}<span class="arrow">/</span>발생 <span class="act">${fmt(r.actual)}</span>`;
+  switch(r.type){
+    case "D": return `${esc(r.due||"기한 미정")}<span class="arrow">→</span>` +
+      `<span class="act">${r.done?esc(r.done):"미완료"}</span>`;
+    case "M": return `단계 <span class="act">${fmt(r.done)}</span><span class="arrow">/</span>100`;
+    default:
+      if(r.target===null||r.target===undefined) return `<span style="color:var(--crit)">목표 미설정</span>`;
+      return `${fmt(r.target)}${u}<span class="arrow">←</span>` +
+        `<span class="act">${r.actual===null||r.actual===undefined?"미기재":fmt(r.actual)}</span>`;
+  }
+}
+function formulaText(r){
+  const f=x=>x===null||x===undefined?"·":(typeof x==="number"?fmt(x):esc(x));
+  if(isGuard(r)) return `− (발생 ${f(r.actual)} − 허용 ${f(r.allow)}) × ${f(r.ded)}%p`;
+  switch(r.type){
+    case "R": case "C": return `(${f(r.actual)} ÷ ${f(r.target)}) × 100`;
+    case "L": return `(${f(r.actual)} − ${f(r.low)}) ÷ (${f(r.target)} − ${f(r.low)}) × 100`;
+    case "D": return `100 − (지연일수 × ${f(r.ded)}%p)`;
+    case "M": return `완료단계 합 ${f(r.done)} / 100   [${esc(r.miles||"단계 정의 필요")}]`;
+    default: return "측정유형 미지정";
+  }
+}
+
+/* ---------- 집계 ----------
+   간편판은 아무것도 계산하지 않는다. 팀 진도율은 각 팀 탭의 '팀 달성률(직접 입력)'
+   칸을 00_대시보드 탭이 비추고, 여기서는 그 수기값을 그대로 보여준다. */
+function teamStats(team){
+  const rows = state.data.rows.filter(r=>r.team===team);
+  const tRows = rows.filter(r=>r.level==="팀" && r.name);
+  const pRows = rows.filter(r=>r.level==="개인" && r.name);
+  const t = state.data.teams.find(x=>x.team===team);
+  const rate = numRate(t && t.rate);
+  const blank = tRows.filter(r=>numRate(r.rate)===null).length;
+  return {team, tRows, pRows, rate, blank, written: tRows.length>0 || pRows.length>0};
+}
+const allStats = () => state.data.teams.map(t=>({...t, ...teamStats(t.team)}));
+
+/* ---------- 렌더 ---------- */
+function gauge(v, cls, sm, label){
+  const w = v===null?0:Math.min(100, Math.max(0,v)/120*100);
+  const aria = v===null ? 'aria-label="진도율 미기재"'
+    : `role="img" aria-label="${label?esc(label)+" ":""}진도율 ${pct(v)}, ${BAND_KO[cls]||""}, 목표 100%"`;
+  return `<div class="gauge${sm?" sm":""}" ${aria}>`+
+    `<u class="b1"></u><u class="b2"></u><u class="b3"></u>`+
+    `<i class="fill-${cls}" style="width:${w}%"></i><b></b></div>`;
+}
+
+function moneyCard(m, hero){
+  const b=band(m.rate);
+  const noGoal = !m.annual;
+  /* 이 카드는 연간(1~12월) 기준이다 — 팀/개인 목표(하반기 KPI)와는 별개 주기다. */
+  return `<div class="stat${hero?" hero":""}">
+    <div class="eyebrow">연간 ${esc(HEADLINE_LABEL[m.name] || m.name.replace(" 합계",""))}</div>
+    <div class="st">
+      <div class="big num" style="color:${noGoal?"var(--ink-3)":col(b)}">${
+        noGoal?"—":pct(m.rate).replace("%","")}<small>%</small></div>
+      <div class="goal"><b>${noGoal?"목표 미설정":fmt(m.annual)+" "+esc(m.unit)}</b>
+        실적 ${m.actual==null?"미기재":fmt(m.actual)}</div>
+    </div>
+    <div class="gwrap">${gauge(noGoal?null:m.rate, b, false, m.name)}</div>
+    ${noGoal?`<div class="cap" style="color:var(--warn)">시트 05_전사지표 탭의 연간 목표 칸이 비어 있습니다</div>`
+            :`<div class="cap">시트 05_전사지표 탭 연동</div>`}
+  </div>`;
+}
+function renderTotal(S){
+  const sc=S.filter(s=>s.rate!==null);
+  const head=sc.length?sc.reduce((a,s)=>a+s.rate,0)/sc.length:null;
+  const written=S.filter(s=>s.written).length;
+  const co=state.data.company||[];
+  const hl=(state.data.headline||[]).map(n=>co.find(m=>m.name===n)).filter(Boolean);
+  document.getElementById("total").innerHTML=
+    hl.map((m,i)=>moneyCard(m,i===0)).join("")+`
+    <div class="stat">
+      <div class="eyebrow">전사 평균 진도율</div>
+      <div class="st">
+        <div class="big num" style="color:${col(band(head))}">${
+          head===null?"—":pct(head).replace("%","")}<small>%</small></div>
+        <div class="goal"><b>${S.length}개 팀 KPI</b>목표 작성 ${written}팀<br>
+          <span style="opacity:.75">미작성 ${S.length-written}팀</span></div>
+      </div>
+      <div class="gwrap">${gauge(head, band(head), false, "전사 평균")}</div>
+      <div class="scale">
+        <span><i style="background:var(--band-bad)"></i>70% 미만 미흡</span>
+        <span><i style="background:var(--band-ok)"></i>70~90% 보통</span>
+        <span><i style="background:var(--band-good)"></i>90% 이상 양호</span>
+        <span class="tickleg"><i></i>목표 100%</span>
+      </div>
+    </div>`;
+}
+
+/* ---------- 매출 추이 (OEM / IDENEL / 합계) 꺾은선 ---------- */
+const MONTH_LABELS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
+/* axis:"L" = 좌축(매출), axis:"R" = 우축(영업이익).
+   영업이익은 매출의 5% 수준이라 같은 축에 두면 X축에 붙어 추이가 보이지 않는다.
+   우측 축을 따로 두고 점선 + 중립색으로 '다른 측정치'임을 드러낸다. */
+const CHART_SERIES = [
+  { key: "전사 매출 합계",   label: "매출 합계", token: "--series-1", axis:"L" },
+  { key: "OEM 매출",         label: "OEM",       token: "--series-2", axis:"L" },
+  { key: "IDENEL 매출",      label: "IDENEL",    token: "--series-3", axis:"L" },
+  { key: "전사 영업이익 합계", label: "영업이익",   token: "--series-profit",
+    axis:"R", dash:true },
+];
+function fmtM(v){ return v==null ? "—" : fmt(v)+" 백만원"; }
+/* 눈금 간격을 1·2·2.5·5 × 10^n 으로 잡고 상단값을 그 배수로 맞춘다.
+   눈금이 0 / 2,000 / 4,000 처럼 읽기 좋은 수로 떨어진다. */
+function niceAxis(max, steps){
+  if(!(max>0)) return steps;
+  const raw = max/steps;
+  const e = Math.pow(10, Math.floor(Math.log10(raw)));
+  const m = raw/e;
+  const step = (m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10)*e;
+  return step*steps;
+}
+
+function renderChart(){
+  const co = state.data.company || [];
+  const el = document.getElementById("revChart");
+  const series = CHART_SERIES.map(s => ({...s, row: co.find(m=>m.name===s.key)}))
+                              .filter(s => s.row);
+  if(!series.length){
+    el.innerHTML = `<div class="chd"><h2>매출 추이</h2></div>
+      <div class="chartcap">05_전사지표 탭을 불러오면 이 자리에 월별 매출 추이가 표시됩니다.</div>`;
+    return;
+  }
+  /* 매출과 영업이익은 자릿수가 달라(영업이익이 매출의 약 5%) 한 축에 못 담는다.
+     이중 축을 쓰면 두 선의 높이가 우연히 겹쳐 "영업이익 ≈ 매출"로 오독된다.
+     그래서 X축을 공유하는 상·하 2단으로 나눈다 — 겹침이 불가능하고
+     각 단에서 자기 추이가 온전히 보인다. */
+  const hasB = series.some(s=>s.axis==="R" && (s.row.monthly||[]).some(v=>v!=null));
+  const W = 860, PAD = {t:14, r:18, l:52};
+  const BAND = hasB
+    ? {A:{y:14, h:112}, B:{y:162, h:52}, xLab:236, H:248}
+    : {A:{y:14, h:180}, B:null,          xLab:214, H:226};
+  const H = BAND.H;
+  const plotW = W - PAD.l - PAD.r;
+  const maxOf = ax => {
+    const v = series.filter(s=>s.axis===ax)
+                    .flatMap(s => (s.row.monthly||[]).filter(n=>n!=null));
+    return v.length ? Math.max(...v) : 0;
+  };
+  const stepsA = 4, stepsB = 2;
+  const maxA = niceAxis(maxOf("L"), stepsA) || 1000;
+  const maxB = niceAxis(maxOf("R"), stepsB) || 100;
+  const x = i => PAD.l + (i/(MONTH_LABELS.length-1)) * plotW;
+  const bandOf = ax => (ax==="R" && BAND.B) ? BAND.B : BAND.A;
+  const yOn = (v, ax) => {
+    const bd = bandOf(ax), mx = (ax==="R" && BAND.B) ? maxB : maxA;
+    return bd.y + bd.h - (v/mx) * bd.h;
+  };
+
+  let gridSvg = "";
+  for(let i=0;i<=stepsA;i++){
+    const v = maxA*i/stepsA, yy = yOn(v,"L");
+    gridSvg += `<line class="grid" x1="${PAD.l}" x2="${W-PAD.r}" y1="${yy}" y2="${yy}"/>
+      <text class="tick" x="${PAD.l-8}" y="${yy+3}" text-anchor="end">${fmt(v)}</text>`;
+  }
+  if(BAND.B) for(let i=0;i<=stepsB;i++){
+    const v = maxB*i/stepsB, yy = yOn(v,"R");
+    gridSvg += `<line class="grid" x1="${PAD.l}" x2="${W-PAD.r}" y1="${yy}" y2="${yy}"/>
+      <text class="tick lower" x="${PAD.l-8}" y="${yy+3}" text-anchor="end">${fmt(v)}</text>`;
+  }
+  /* 아래 단이 무엇인지 단 안에 직접 적는다 — 범례를 왕복하지 않게 */
+  const bandLabel = BAND.B
+    ? `<text class="bandlab" x="${PAD.l+6}" y="${BAND.B.y-6}">영업이익 (전사)</text>`
+    : "";
+  let xTicks = "";
+  MONTH_LABELS.forEach((m,i)=>{
+    xTicks += `<text class="tick" x="${x(i)}" y="${BAND.xLab}" text-anchor="middle">${m}</text>`;
+  });
+
+  let linesSvg = "", dotsSvg = "";
+  series.forEach(s=>{
+    const pts = (s.row.monthly||[]).map((v,i)=> v==null ? null : [x(i), yOn(v,s.axis)]);
+    const segs = [];
+    let cur = [];
+    pts.forEach(p=>{ if(p){ cur.push(p); } else if(cur.length){ segs.push(cur); cur=[]; } });
+    if(cur.length) segs.push(cur);
+    segs.forEach(seg=>{
+      const d = seg.map((p,i)=> (i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+      linesSvg += `<path class="line${s.dash?" dash":""}" d="${d}" stroke="var(${s.token})"/>`;
+    });
+    pts.forEach((p,i)=>{ if(p) dotsSvg +=
+      `<circle class="dot" cx="${p[0]}" cy="${p[1]}" r="4" fill="var(${s.token})" data-s="${s.key}" data-i="${i}"/>`; });
+  });
+
+  /* 히트영역은 두 단을 한꺼번에 덮어 한 번의 호버로 4개 값을 모두 보여준다 */
+  const hitTop = BAND.A.y, hitBot = (BAND.B ? BAND.B.y + BAND.B.h : BAND.A.y + BAND.A.h);
+  const hits = MONTH_LABELS.map((_,i)=>
+    `<rect class="hit" data-i="${i}" x="${x(i)-plotW/(MONTH_LABELS.length-1)/2}" y="${hitTop}"
+       width="${plotW/(MONTH_LABELS.length-1)}" height="${hitBot-hitTop}"></rect>`).join("");
+  const axisLine = (y1,y2) =>
+    `<line class="axis" x1="${PAD.l}" x2="${PAD.l}" y1="${y1}" y2="${y2}"/>
+     <line class="axis" x1="${PAD.l}" x2="${W-PAD.r}" y1="${y2}" y2="${y2}"/>`;
+
+  el.innerHTML = `<div class="chd">
+      <h2>매출 · 영업이익 추이 (월별, 단위 백만원)</h2>
+      <div class="legend">${series.map(s=>
+        `<span class="key"><span class="swatch${
+          s.dash?" dash":""}" style="${s.dash?"color":"background"}:var(${s.token})"></span><span
+          >${esc(s.label)}</span>${
+          s.axis==="R"?`<span class="axnote">· 아래 단</span>`:""}</span>`).join("")}</div>
+    </div>
+    <div class="chartwrap" style="position:relative">
+      <svg class="linechart" viewBox="0 0 ${W} ${H}" role="img"
+        aria-label="위 단은 OEM 매출, IDENEL 매출, 전사 매출 합계의 월별 추이. ${
+          BAND.B?"아래 단은 전사 영업이익의 월별 추이. 두 단은 X축(월)을 공유하고 세로 눈금은 각각 다릅니다.":""}">
+        ${gridSvg}
+        ${axisLine(BAND.A.y, BAND.A.y+BAND.A.h)}
+        ${BAND.B?axisLine(BAND.B.y, BAND.B.y+BAND.B.h):""}
+        ${bandLabel}
+        ${xTicks}
+        ${linesSvg}
+        ${dotsSvg}
+        <line class="crosshair" id="chCross" x1="0" x2="0" y1="${hitTop}" y2="${hitBot}"/>
+        ${hits}
+      </svg>
+      <div class="charttip" id="chTip"></div>
+    </div>
+    <div class="chartcap">선이 끊긴 구간은 아직 실적이 입력되지 않은 월입니다. 05_전사지표 탭의 1~12월 칸을 채우면 이어집니다.${
+      BAND.B?" 영업이익은 매출의 5% 수준이라 같은 눈금에 담으면 바닥에 붙어 추이가 보이지 않습니다. 그래서 <b>아래 단으로 분리</b>했습니다. 두 단은 월(X축)만 공유하며 세로 눈금은 각각 다릅니다.":""}</div>`;
+
+  const svg = el.querySelector("svg"), cross = el.querySelector("#chCross"), tip = el.querySelector("#chTip");
+  el.querySelectorAll(".hit").forEach(hit=>{
+    const i = +hit.dataset.i;
+    const show = ()=>{
+      cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.style.opacity = 1;
+      const rows = series.map(s=>({label:s.label, token:s.token, dash:!!s.dash,
+                                   v:(s.row.monthly||[])[i]}))
+                         .filter(r=>r.v!=null);
+      if(!rows.length){ tip.style.opacity = 0; return; }
+      tip.innerHTML = `<div class="tt-x"></div>` + rows.map(()=>
+        `<div class="tt-row"><span class="tt-key"><span class="tt-line"></span><span class="tt-name"></span></span>
+         <span class="tt-val"></span></div>`).join("");
+      tip.querySelector(".tt-x").textContent = MONTH_LABELS[i];
+      [...tip.querySelectorAll(".tt-row")].forEach((row,ri)=>{
+        const key = row.querySelector(".tt-line");
+        /* 점선 계열은 툴팁 키도 점선으로 — 축이 다르다는 신호를 유지한다 */
+        if(rows[ri].dash){
+          key.style.background = "none";
+          key.style.height = "0";
+          key.style.borderTop = `2px dashed var(${rows[ri].token})`;
+        } else {
+          key.style.background = `var(${rows[ri].token})`;
+        }
+        row.querySelector(".tt-name").textContent = rows[ri].label;
+        row.querySelector(".tt-val").textContent = fmtM(rows[ri].v);
+      });
+      const svgRect = svg.getBoundingClientRect(), wrapRect = el.querySelector(".chartwrap").getBoundingClientRect();
+      const px = svgRect.left - wrapRect.left + (x(i)/W)*svgRect.width;
+      tip.style.left = Math.min(px+10, wrapRect.width-140) + "px";
+      tip.style.top = "6px";
+      tip.style.opacity = 1;
+    };
+    hit.addEventListener("pointerenter", show);
+    hit.addEventListener("pointermove", show);
+    hit.addEventListener("focus", show);
+    hit.addEventListener("pointerleave", ()=>{ cross.style.opacity=0; tip.style.opacity=0; });
+    hit.addEventListener("blur", ()=>{ cross.style.opacity=0; tip.style.opacity=0; });
+    hit.setAttribute("tabindex","0");
+    hit.setAttribute("role","img");
+    hit.setAttribute("aria-label", `${MONTH_LABELS[i]} 실적`);
+  });
+}
+
+function kpiRow(r){
+  const rt=numRate(r.rate), b=band(rt);
+  const isG=isGuard(r);
+  const val = r.rateNote ? esc(r.rateNote) : (rt===null?"미기재":pct(rt));
+  /* 연동방식은 계산에 관여하지 않으므로 강조색이 아닌 회색 배지로 둔다.
+     강조하면 '이 행은 특별히 계산된다'는 오해를 부른다. */
+  return `<button class="krow" data-kpi="${esc(r.kpiId)}" type="button">
+    <span class="kn">${r.level==="개인"&&r.owner?`<span class="chip who">${esc(r.owner)}</span> `:""}${esc(r.name)}
+      ${isG?`<span class="chip crit">가드레일</span>`:""}
+      ${r.level==="팀"&&r.linkMode?`<span class="chip idle" title="설계 의도 기록용">${esc(r.linkMode)}</span>`:""}</span>
+    <span class="ksub">${targetLine(r)}</span>
+    <span class="kv" style="color:${col(isG&&rt<0?"crit":b)}">${val}</span>
+    <span class="kg">${gauge(rt,b,true,r.name)}</span>
+  </button>`;
+}
+
+function teamBlock(s){
+  const b=band(s.rate);
+  const flags=[];
+  if(!s.written) flags.push(`<span class="chip crit">목표 미작성</span>`);
+  else{
+    if(s.rate===null) flags.push(`<span class="chip warn">팀 달성률 미기재</span>`);
+    if(s.blank) flags.push(`<span class="chip warn">달성률 미기재 ${s.blank}</span>`);
+  }
+  const open=!state.collapsed.has(s.team);
+  const head=`<button class="thead" type="button" data-team="${esc(s.team)}"
+      aria-expanded="${open}">
+    <span class="caret">${open?"▾":"▸"}</span>
+    <span><span class="tname">${esc(s.team)}</span>
+      <span class="tmeta">${esc(s.lead)} · ${s.n}명${s.written?` · 팀 ${s.tRows.length} · 개인 ${s.pRows.length}`:""}</span></span>
+    <span class="tv" style="color:${col(b)}">${pct(s.rate)}</span>
+    <span>${gauge(s.rate,b,true,s.team)}</span>
+    ${flags.length?`<span class="tflags">${flags.join("")}</span>`:""}</button>`;
+
+  if(!s.written) return `<div class="tblock${open?"":" collapsed"}">${head}
+    ${open?`<div class="emptyteam">하반기 목표가 아직 작성되지 않았습니다.</div>`:""}</div>`;
+  if(!open) return `<div class="tblock collapsed">${head}</div>`;
+  /* 팀 목표 다음 개인 목표 — 매칭 없이 담당자 배지로 구분해 나열한다 (조회 전용) */
+  const psec = s.pRows.length
+    ? `<div class="secrow">개인 목표</div>` + s.pRows.map(kpiRow).join("")
+    : "";
+  return `<div class="tblock">${head}${s.tRows.map(kpiRow).join("")}${psec}</div>`;
+}
+
+function render(){
+  const S=allStats();
+  document.getElementById("periodLine").textContent=
+    `대상 기간 ${state.data.period} · ${S.length}개 팀 · 팀 목표와 개인 목표 연동`;
+  document.getElementById("asOf").textContent=`기준일 ${state.data.asOf}`;
+  renderTotal(S);
+  renderChart();
+  document.getElementById("view").innerHTML = CAMPUS_ORDER.map(c=>{
+    const g=S.filter(s=>s.campus===c);
+    const gs=g.filter(s=>s.rate!==null);
+    const avg=gs.length?gs.reduce((a,s)=>a+s.rate,0)/gs.length:null;
+    const ab=band(avg);
+    g.sort((a,b)=>(b.written?1:0)-(a.written?1:0) || (b.rate??-1)-(a.rate??-1)
+                  || a.team.localeCompare(b.team,"ko"));
+    return `<section class="col" aria-label="${c} 캠퍼스">
+      <div class="chead">
+        <span></span>
+        <span><span class="cn" style="color:var(${CAMPUS_VAR[c]})">${c} 캠퍼스</span>
+          <span class="cs">${g.length}팀 · 목표 작성 ${g.filter(s=>s.written).length}</span></span>
+        <span class="cv" style="color:${col(ab)}">${pct(avg)}</span>
+        <span>${gauge(avg,ab,true,c+" 캠퍼스")}</span>
+      </div>
+      ${g.map(teamBlock).join("")}</section>`;
+  }).join("");
+  document.querySelectorAll(".krow").forEach(btn=>
+    btn.addEventListener("click",()=>openPanel(btn.dataset.kpi)));
+  const anyCollapsed = state.data.teams.some(t=>state.collapsed.has(t.team));
+  const fb=document.getElementById("foldBtn");
+  fb.textContent = anyCollapsed ? "전체 펼치기" : "전체 접기";
+  fb.onclick = () => { anyCollapsed ? expandAll() : collapseAll(); render(); };
+  const openN = state.data.teams.length - state.collapsed.size;
+  document.getElementById("tbInfo").textContent =
+    `팀 ${openN} / ${state.data.teams.length}개 펼침`;
+  document.querySelectorAll(".thead").forEach(btn=>
+    btn.addEventListener("click",()=>{
+      const t=btn.dataset.team;
+      state.collapsed.has(t)?state.collapsed.delete(t):state.collapsed.add(t);
+      render();
+    }));
+  markDup();
+}
+/* 이미 패널로 열려 있는 KPI 행을 표시 */
+function markDup(){
+  document.querySelectorAll(".krow").forEach(b=>
+    b.classList.toggle("dup", state.panels.has(b.dataset.kpi)));
+}
+
+/* ---------- 플로팅 패널 ---------- */
+/* 여러 개를 동시에 띄워 비교할 수 있어야 하므로 모달(<dialog showModal>)을 쓰지 않는다.
+   대신 비모달 패널을 겹쳐 띄우고, 헤더를 잡아 옮긴다. */
+const panels = document.getElementById("panels");
+
+function panelBody(r){
+  const rt=numRate(r.rate), b=band(rt), isG=isGuard(r);
+  const facts=[
+    ["팀 내 비중", r.weight!=null?r.weight+"%":"미배분"],
+    ...(r.level==="팀"&&r.linkMode ? [["연동방식", r.linkMode+" (기록용)"]] : []),
+    ["담당자", r.owner||"미지정"],
+    ["측정유형", isG?"가드레일":(r.type?TYPE_LABEL[r.type]:"미지정")],
+    isG ? ["허용 / 차감", `${fmt(r.allow)}건 / ${fmt(r.ded)}%p`]
+        : ["목표값", r.target!=null?`${fmt(r.target)}${r.unit?" "+r.unit:""}`:"미설정"],
+    isG ? ["발생 건수", fmt(r.actual)]
+        : ["현재 실적", r.actual!=null?fmt(r.actual):"미기재"],
+  ];
+  return `<div class="mrate">
+      <span class="mv" style="color:${col(isG&&rt<0?"crit":b)}">${
+        r.rateNote?esc(r.rateNote):(rt===null?"미기재":pct(rt))}</span>
+      <span class="mg">${gauge(rt,b,false,r.name)}</span>
+    </div>
+    <dl class="mfacts">${facts.map(([k,v])=>
+      `<div class="fact"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
+    <div class="msec">이 목표를 세운 이유</div>
+    <div class="mwhy">${esc(r.why)||'<span style="color:var(--crit)">설정 이유가 비어 있습니다</span>'}</div>
+    <div class="msec">달성률 계산 참고식 (실제 값은 팀장이 직접 입력)</div>
+    <div class="formula">${formulaText(r)}</div>
+    ${r.note?`<div class="msec">비고</div><div class="mwhy">${esc(r.note)}</div>`:""}`;
+}
+
+function bringToFront(el){
+  panels.querySelectorAll(".panel").forEach(p=>p.classList.remove("front"));
+  el.style.zIndex = ++state.z;
+  el.classList.add("front");
+}
+
+function openPanel(kpiId){
+  const existing = state.panels.get(kpiId);
+  if(existing){ bringToFront(existing); existing.querySelector(".mclose").focus(); return; }
+  const r = state.data.rows.find(x=>x.kpiId===kpiId);
+  if(!r) return;
+
+  const el = document.createElement("section");
+  el.className = "panel";
+  el.setAttribute("role","dialog");
+  el.setAttribute("aria-label", `${r.team} ${r.name} 상세`);
+  el.dataset.kpi = kpiId;
+
+  // 열 때마다 조금씩 어긋나게 놓아 겹쳐도 헤더가 보이게 한다
+  const w = Math.min(430, innerWidth-28);
+  const step = 26, n = state.cascade++ % 8;
+  const left = Math.min(innerWidth - w - 14, 46 + n*step);
+  const top  = Math.min(innerHeight - 160, 92 + n*step);
+  el.style.left = Math.max(10,left)+"px";
+  el.style.top  = Math.max(10,top)+"px";
+
+  el.innerHTML = `<div class="mhead">
+      <span class="grip" aria-hidden="true"></span>
+      <div class="mt"><div class="mkicker">${esc(r.team)} · ${esc(r.kpiId)}</div>
+        <h2 class="mtitle">${esc(r.name)}</h2></div>
+      <button class="mclose" type="button" aria-label="${esc(r.name)} 창 닫기">✕</button>
+    </div>
+    <div class="mbody">${panelBody(r)}</div>`;
+
+  panels.appendChild(el);
+  state.panels.set(kpiId, el);
+  bringToFront(el);
+  el.querySelector(".mclose").addEventListener("click",()=>closePanel(kpiId));
+  el.addEventListener("pointerdown",()=>bringToFront(el));
+  makeDraggable(el, el.querySelector(".mhead"));
+  el.querySelector(".mclose").focus();
+  updatePanelInfo();
+  markDup();
+}
+
+function closePanel(kpiId){
+  const el = state.panels.get(kpiId);
+  if(!el) return;
+  el.remove();
+  state.panels.delete(kpiId);
+  updatePanelInfo();
+  markDup();
+  // CSS.escape 에 의존하지 않고 순회로 찾는다 (KPI_ID 에 한글·하이픈이 섞여 있다)
+  const back = [...document.querySelectorAll(".krow")].find(b=>b.dataset.kpi===kpiId);
+  if(back) back.focus();
+}
+function closeAllPanels(){
+  [...state.panels.keys()].forEach(k=>{
+    state.panels.get(k).remove(); state.panels.delete(k);
+  });
+  updatePanelInfo(); markDup();
+}
+function updatePanelInfo(){
+  const n = state.panels.size;
+  const el = document.getElementById("panelInfo");
+  el.innerHTML = n
+    ? `창 ${n}개 열림 <button class="closeall" type="button" id="closeAll">모두 닫기</button>`
+    : "KPI를 클릭하면 창이 열립니다. 여러 개를 띄워 나란히 비교할 수 있습니다.";
+  const b = document.getElementById("closeAll");
+  if(b) b.addEventListener("click",closeAllPanels);
+}
+
+/* 헤더를 잡아 이동. 마우스가 없어도 쓸 수 있게 방향키 이동도 지원한다. */
+function makeDraggable(el, handle){
+  let sx=0, sy=0, ox=0, oy=0, dragging=false;
+  handle.addEventListener("pointerdown", e=>{
+    if(e.target.closest("button")) return;
+    dragging=true; sx=e.clientX; sy=e.clientY;
+    ox=parseFloat(el.style.left)||0; oy=parseFloat(el.style.top)||0;
+    handle.setPointerCapture(e.pointerId);
+    bringToFront(el);
+  });
+  handle.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    e.preventDefault();
+    move(ox + e.clientX - sx, oy + e.clientY - sy);
+  });
+  const stop = e=>{ dragging=false;
+    try{ handle.releasePointerCapture(e.pointerId); }catch(_){} };
+  handle.addEventListener("pointerup", stop);
+  handle.addEventListener("pointercancel", stop);
+
+  handle.tabIndex = 0;
+  handle.setAttribute("role","button");
+  handle.setAttribute("aria-label","창 위치 이동 — 방향키로 옮길 수 있습니다");
+  handle.addEventListener("keydown", e=>{
+    const d = e.shiftKey ? 40 : 12;
+    const x=parseFloat(el.style.left)||0, y=parseFloat(el.style.top)||0;
+    if(e.key==="ArrowLeft") move(x-d,y); else if(e.key==="ArrowRight") move(x+d,y);
+    else if(e.key==="ArrowUp") move(x,y-d); else if(e.key==="ArrowDown") move(x,y+d);
+    else return;
+    e.preventDefault(); bringToFront(el);
+  });
+  function move(x,y){
+    const w=el.offsetWidth, h=el.offsetHeight;
+    el.style.left = Math.max(4, Math.min(innerWidth - w - 4, x)) + "px";
+    el.style.top  = Math.max(4, Math.min(innerHeight - Math.min(h,120) - 4, y)) + "px";
+  }
+}
+
+/* ESC 는 가장 앞에 있는 창 하나만 닫는다 */
+document.addEventListener("keydown", e=>{
+  if(e.key!=="Escape" || !state.panels.size) return;
+  let top=null, tz=-1;
+  state.panels.forEach(el=>{ const z=+el.style.zIndex||0; if(z>tz){tz=z; top=el;} });
+  if(top) closePanel(top.dataset.kpi);
+});
+/* 창 크기가 줄어도 패널이 화면 밖으로 나가지 않게 */
+addEventListener("resize", ()=>state.panels.forEach(el=>{
+  el.style.left = Math.max(4, Math.min(innerWidth - el.offsetWidth - 4,
+                  parseFloat(el.style.left)||0)) + "px";
+  el.style.top  = Math.max(4, Math.min(innerHeight - 120, parseFloat(el.style.top)||0)) + "px";
+}));
+
+/* ---------- CSV → rows ---------- */
+function parseCSV(text){
+  const out=[]; let row=[], f="", q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===","){ row.push(f); f=""; }
+    else if(c==="\n"){ row.push(f); out.push(row); row=[]; f=""; }
+    else if(c!=="\r") f+=c;
+  }
+  if(f||row.length){ row.push(f); out.push(row); }
+  return out.filter(r=>r.some(v=>v!==""));
+}
+const MAP={팀:"team",캠퍼스:"campus",레벨:"level",KPI_ID:"kpiId",담당자:"owner",
+  가드레일:"guard",연동방식:"linkMode","비중(%)":"weight",
+  KPI명:"name","설정 이유":"why",측정유형:"type",단위:"unit",
+  "하한(기준선)":"low",목표값:"target",목표일:"due","감점률(%p)":"ded",
+  허용횟수:"allow","마일스톤 정의":"miles","완료일/완료단계":"done",
+  "실적(최신)":"actual","달성률(%)":"rate",상태:"status",비고:"note"};
+/* guard 는 NUMF 에 넣지 않는다 — "1"→1 변환에 의존하지 않고 isGuard() 가 판정한다 */
+const NUMF=new Set(["weight","low","target","ded","allow","actual","rate"]);
+const NEED_HEADS=["팀","레벨","KPI명","측정유형","가드레일"];
+function fromCSV(text){
+  const t=parseCSV(text);
+  if(t.length<2) throw new Error(
+    "01_상세데이터 탭에 데이터 행이 없습니다 — 팀 탭에 KPI명을 아직 아무도 채우지 않았습니다");
+  const head=t[0].map(h=>h.trim());
+  const miss=NEED_HEADS.filter(h=>!head.includes(h));
+  if(miss.length) throw new Error("헤더 누락: "+miss.join(", ")+
+    " — 경량판 시트가 아닌 것 같습니다");
+  const rows=t.slice(1).map(r=>{
+    const o={};
+    head.forEach((h,i)=>{ const k=MAP[h]; if(!k) return;
+      let v=(r[i]??"").trim();
+      if(v===""){ o[k]=null; return; }
+      o[k]= NUMF.has(k) ? (isNaN(Number(v.replace(/[,%]/g,"")))?v:Number(v.replace(/[,%]/g,""))) : v;
+    });
+    if(o.type==="M" && o.done!==null) o.done=Number(o.done)||o.done;
+    return o;
+  }).filter(o=>o.name && o.team);
+  if(!rows.length) throw new Error(
+    "KPI명이 채워진 행이 없습니다 — 팀 탭에 목표를 하나라도 입력한 뒤 다시 불러오세요");
+  /* 간편판: 달성률은 팀장이 시트에 직접 넣은 수기값이다. 재계산하지 않는다.
+     숫자가 아니면(공란·텍스트) 미기재로 처리한다. */
+  rows.forEach(r=>{ r.rate = numRate(r.rate); r.rateNote = null; });
+  const teams=DATA.teams.map(t=>({...t}));
+  rows.filter(r=>r.level==="팀").forEach(r=>{
+    const t=teams.find(x=>x.team===r.team); if(t && !t.lead) t.lead=r.owner||"";
+  });
+  return {period:DATA.period, asOf:new Date().toISOString().slice(0,10), teams, rows};
+}
+/* 01_상세데이터 와 05_전사지표 두 탭을 읽는다. gviz 는 '링크가 있는 모든 사용자: 뷰어'면 열린다. */
+const tabUrl = (id,tab,range) =>
+  `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${
+    encodeURIComponent(tab)}&range=${range}`;
+async function fetchCsv(u){
+  const r=await fetch(u);
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  return r.text();
+}
+/* 전사 매출·영업이익(05_전사지표)은 연간(1~12월) 기준으로 추적한다 — 팀/개인
+   목표(하반기 KPI)와는 별개다. 목표는 '연간 목표' 하나만 쓴다("하반기 목표"는
+   삭제 대상이라 매핑하지 않는다 — 시트에 남아 있어도 조용히 무시된다). */
+const CMAP={"지표":"name","단위":"unit","연간 목표":"annual",
+  "실적(최신)":"actual","달성도(%)":"rate","비고":"note"};
+const CMONTH_COLS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
+function parseCompany(text){
+  const t=parseCSV(text); if(t.length<2) return [];
+  const head=t[0].map(h=>h.trim());
+  return t.slice(1).map(r=>{
+    const o={};
+    head.forEach((h,i)=>{ const k=CMAP[h]; if(!k) return;
+      const v=(r[i]??"").trim();
+      o[k]= v==="" ? null
+        : (["annual","half","actual","rate"].includes(k)
+            ? (isNaN(Number(v.replace(/[,%]/g,"")))?null:Number(v.replace(/[,%]/g,"")))
+            : v);
+    });
+    // 월별 실적(7~12월) — 꺾은선 차트가 이 배열을 읽는다
+    o.monthly = CMONTH_COLS.map(h=>{
+      const i = head.indexOf(h); if(i<0) return null;
+      const v = (r[i]??"").trim();
+      return v===""||isNaN(Number(v.replace(/[,%]/g,""))) ? null : Number(v.replace(/[,%]/g,""));
+    });
+    // 시트 달성도를 신뢰하되, 비어 있으면 여기서 계산한다 (연간 목표 기준)
+    if(o.rate==null && o.annual && o.actual!=null)
+      o.rate=Math.max(0,Math.min(120,o.actual/o.annual*100));
+    return o;
+  }).filter(o=>o.name);
+}
+async function fromSheets(id, raw){
+  const direct=/^https?:.*(output=csv|out:csv)/.test(raw);
+  /* 경량 스키마는 30컬럼(A~AD, 마지막이 비고)이다. 기존판은 AI 까지만 읽어
+     비고(AJ)가 잘렸다 — 범위를 정확히 맞추면 비고가 패널에 처음으로 보인다. */
+  /* 간편판 스키마는 29컬럼(A~AC, 마지막이 비고) */
+  const d=fromCSV(await fetchCsv(direct ? raw : tabUrl(id,"01_상세데이터","A4:AC500")));
+  d.headline = DATA.headline;
+  d.company = [];
+  if(!direct){
+    try{ d.company = parseCompany(await fetchCsv(tabUrl(id,"05_전사지표","A4:R20"))); }
+    catch(e){ console.warn("05_전사지표 탭을 읽지 못했습니다 —", e.message); }
+    /* 팀 달성률(수기) — 00_대시보드 탭이 각 팀 탭 D2 를 비춘다 */
+    try{
+      const t00=parseCSV(await fetchCsv(tabUrl(id,"00_대시보드","A5:E19")));
+      t00.forEach(r=>{
+        const t=d.teams.find(x=>x.team===(r[0]||"").trim());
+        if(t){ const v=(r[4]||"").replace(/[,%]/g,"");
+               t.rate = v!==""&&!isNaN(Number(v)) ? Number(v) : null; }
+      });
+    }catch(e){ console.warn("00_대시보드 탭을 읽지 못했습니다 —", e.message); }
+  }
+  return d;
+}
+async function loadSheet(){
+  const raw=document.getElementById("sheetUrl").value.trim();
+  if(!raw) return;
+  const dot=document.getElementById("srcDot"), txt=document.getElementById("srcText");
+  const btn=document.getElementById("loadBtn");
+  const id=(raw.match(/\/d\/([a-zA-Z0-9-_]{20,})/)||[,raw])[1];
+  dot.className="dot busy"; txt.textContent="불러오는 중…"; btn.disabled=true;
+  try{
+    state.data=await fromSheets(id, raw);
+    closeAllPanels();
+    collapseAll();
+    dot.className="dot live";
+    txt.textContent=`시트 연동 · KPI ${state.data.rows.length}행` +
+      (state.data.company.length?` · 전사지표 ${state.data.company.length}행`
+                                :" · 전사지표 없음");
+    render();
+    state.loaded = true;
+    try{ localStorage.setItem(LS_KEY, raw); }catch(e){}
+  }catch(e){
+    dot.className="dot err";
+    txt.textContent = (e instanceof TypeError)
+      ? "이 사본에서는 외부 요청이 차단됩니다 — 내려받은 HTML 파일에서 사용하세요"
+      : /HTTP 404/.test(e.message)
+        ? "불러오기 실패 (404) — 시트 ID가 잘못되었거나 탭 이름이 '01_상세데이터'가 아닙니다"
+        : /HTTP 40[13]/.test(e.message)
+        ? `불러오기 실패 (${e.message}) — 시트 공유를 '링크가 있는 모든 사용자: 뷰어'로 바꿔주세요`
+        : `불러오기 실패 — ${e.message}`;
+    /* 실 배포본(시트 ID가 박힌 사본)에서 불러오기가 실패하면 내장 샘플 데이터를
+       그대로 두면 안 된다. 가상 숫자가 실제 실적처럼 읽힌다. 비우고 '미작성'으로
+       떨어뜨려, 화면에 남는 값이 전부 시트에서 온 것임을 보장한다. */
+    if(DEFAULT_SHEET_ID && !state.loaded){
+      state.data = {...state.data, rows:[], asOf:"",
+        company:(state.data.company||[]).map(m=>
+          ({...m, half:null, actual:null, rate:null, monthly:[null,null,null,null,null,null]}))};
+      closeAllPanels(); collapseAll(); render();
+    }
+    console.error(e);
+  }finally{ btn.disabled=false; }
+}
+
+updatePanelInfo();
+document.getElementById("loadBtn").addEventListener("click",loadSheet);
+document.getElementById("sheetUrl").addEventListener("keydown",e=>{ if(e.key==="Enter") loadSheet(); });
+/* 자동 연동: 이 기기에서 예전에 불러온 시트가 있으면 그걸, 없으면 DEFAULT_SHEET_ID를 자동으로 불러온다. */
+(function bootstrapSheet(){
+  let saved=""; try{ saved=localStorage.getItem(LS_KEY)||""; }catch(e){}
+  const src = saved || DEFAULT_SHEET_ID;
+  if(!src) return;
+  document.getElementById("sheetUrl").value = src;
+  loadSheet();
+})();
+document.getElementById("themeBtn").addEventListener("click",()=>{
+  const r=document.documentElement;
+  const dark=r.getAttribute("data-theme")==="dark" ||
+    (!r.getAttribute("data-theme") && matchMedia("(prefers-color-scheme:dark)").matches);
+  r.setAttribute("data-theme", dark?"light":"dark");
+});
+render();
+</script>
