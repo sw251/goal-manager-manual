@@ -355,7 +355,7 @@ const HEADLINE_LABEL = {
   "전사 영업이익 합계": "전사 영업이익",
 };
 const TYPE_LABEL = {R:"비율 달성형",L:"구간 환산형",C:"건수 누적형",
-                    D:"일정 준수형",M:"마일스톤형"};
+                    D:"일정 준수형",M:"마일스톤형",G:"가드레일(차감형)"};
 let state = {data:DATA, collapsed:new Set(), panels:new Map(), z:60, cascade:0};
 /* 팀 목록이 길어 기본은 접힘으로 둔다. 팀 이름·진도율만 훑고 필요한 팀만 펼친다. */
 const collapseAll = () => { state.collapsed = new Set(state.data.teams.map(t=>t.team)); };
@@ -370,6 +370,7 @@ collapseAll();
    JS 에서 truthy 라 전 행이 가드레일이 되고, 모든 팀 진도율이 0% 로 붕괴한다. */
 const GUARD_TRUE = new Set(["true","1","y","yes","예","o","v","체크","가드레일","필수"]);
 function isGuard(r){
+  if(r && r.type === "G") return true;   // 측정유형 G 도 가드레일이다
   const v = r && r.guard;
   if(v === true) return true;
   if(v === false || v === null || v === undefined) return false;
@@ -693,7 +694,7 @@ function kpiRow(r){
   return `<button class="krow" data-kpi="${esc(r.kpiId)}" type="button">
     <span class="kn">${r.level==="개인"&&r.owner?`<span class="chip who">${esc(r.owner)}</span> `:""}${esc(r.name)}
       ${isG?`<span class="chip crit">가드레일</span>`:""}
-      ${r.level==="팀"&&r.linkMode?`<span class="chip idle" title="설계 의도 기록용">${esc(r.linkMode)}</span>`:""}</span>
+      </span>
     <span class="ksub">${targetLine(r)}</span>
     <span class="kv" style="color:${col(isG&&rt<0?"crit":b)}">${val}</span>
     <span class="kg">${gauge(rt,b,true,r.name)}</span>
@@ -784,9 +785,8 @@ function panelBody(r){
   const rt=numRate(r.rate), b=band(rt), isG=isGuard(r);
   const facts=[
     ["팀 내 비중", r.weight!=null?r.weight+"%":"미배분"],
-    ...(r.level==="팀"&&r.linkMode ? [["연동방식", r.linkMode+" (기록용)"]] : []),
     ["담당자", r.owner||"미지정"],
-    ["측정유형", isG?"가드레일":(r.type?TYPE_LABEL[r.type]:"미지정")],
+    ["측정유형", r.type?TYPE_LABEL[r.type]:(isG?"가드레일":"미지정")],
     isG ? ["허용 / 차감", `${fmt(r.allow)}건 / ${fmt(r.ded)}%p`]
         : ["목표값", r.target!=null?`${fmt(r.target)}${r.unit?" "+r.unit:""}`:"미설정"],
     isG ? ["발생 건수", fmt(r.actual)]
@@ -945,7 +945,7 @@ function parseCSV(text){
   return out.filter(r=>r.some(v=>v!==""));
 }
 const MAP={팀:"team",캠퍼스:"campus",레벨:"level",KPI_ID:"kpiId",담당자:"owner",
-  가드레일:"guard",연동방식:"linkMode","비중(%)":"weight",
+  가드레일:"guard","비중(%)":"weight",
   KPI명:"name","설정 이유":"why",측정유형:"type",단위:"unit",
   "하한(기준선)":"low",목표값:"target",목표일:"due","감점률(%p)":"ded",
   허용횟수:"allow","마일스톤 정의":"miles","완료일/완료단계":"done",
