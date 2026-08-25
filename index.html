@@ -1074,10 +1074,13 @@ async function loadSheet(){
 updatePanelInfo();
 document.getElementById("loadBtn").addEventListener("click",loadSheet);
 document.getElementById("sheetUrl").addEventListener("keydown",e=>{ if(e.key==="Enter") loadSheet(); });
-/* 자동 연동: 이 기기에서 예전에 불러온 시트가 있으면 그걸, 없으면 DEFAULT_SHEET_ID를 자동으로 불러온다. */
+/* 자동 연동: 배포본은 코드에 박힌 최신 시트(DEFAULT_SHEET_ID)를 항상 우선한다.
+   저장된 주소(localStorage)를 우선하면 운영 시트를 갈아탈 때마다 예전에 방문했던
+   사람들이 낡은 시트를 계속 보게 된다 — 실제로 여러 번 겪은 문제다.
+   수동으로 다른 시트를 붙여넣는 건 그 세션에서 여전히 가능하다. */
 (function bootstrapSheet(){
   let saved=""; try{ saved=localStorage.getItem(LS_KEY)||""; }catch(e){}
-  const src = saved || DEFAULT_SHEET_ID;
+  const src = DEFAULT_SHEET_ID || saved;
   if(!src) return;
   document.getElementById("sheetUrl").value = src;
   loadSheet();
