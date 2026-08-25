@@ -362,21 +362,8 @@ const collapseAll = () => { state.collapsed = new Set(state.data.teams.map(t=>t.
 const expandAll   = () => { state.collapsed.clear(); };
 collapseAll();
 
-/* ---------- 가드레일 판정 ----------
-   체크박스는 경로에 따라 표기가 흔들린다. 주입 JSON 은 boolean, 구글시트 CSV 는
-   "TRUE"/"FALSE" 문자열 또는 빈칸으로 온다. 값의 "형태"를 가정하지 않는다.
-
-   ⚠ 절대 if(r.guard) 로 판정하면 안 된다. 체크 해제가 "FALSE" 문자열로 오면
-   JS 에서 truthy 라 전 행이 가드레일이 되고, 모든 팀 진도율이 0% 로 붕괴한다. */
-const GUARD_TRUE = new Set(["true","1","y","yes","예","o","v","체크","가드레일","필수"]);
-function isGuard(r){
-  if(r && r.type === "G") return true;   // 측정유형 G 도 가드레일이다
-  const v = r && r.guard;
-  if(v === true) return true;
-  if(v === false || v === null || v === undefined) return false;
-  if(v === 1) return true;
-  return GUARD_TRUE.has(String(v).trim().toLowerCase());
-}
+/* 가드레일 = 측정유형 G. 체크박스 열은 삭제되었다 (2026-08-24 대표 결정). */
+function isGuard(r){ return !!(r && r.type === "G"); }
 
 /* ---------- 진도율: 시트 수식과 동일한 분기 ---------- */
 function rateOf(r, actualOverride){
@@ -945,14 +932,14 @@ function parseCSV(text){
   return out.filter(r=>r.some(v=>v!==""));
 }
 const MAP={팀:"team",캠퍼스:"campus",레벨:"level",KPI_ID:"kpiId",담당자:"owner",
-  가드레일:"guard","비중(%)":"weight",
+  "비중(%)":"weight",
   KPI명:"name","설정 이유":"why",측정유형:"type",단위:"unit",
   "하한(기준선)":"low",목표값:"target",목표일:"due","감점률(%p)":"ded",
   허용횟수:"allow","마일스톤 정의":"miles","완료일/완료단계":"done",
   "실적(최신)":"actual","달성률(%)":"rate",상태:"status",비고:"note"};
 /* guard 는 NUMF 에 넣지 않는다 — "1"→1 변환에 의존하지 않고 isGuard() 가 판정한다 */
 const NUMF=new Set(["weight","low","target","ded","allow","actual","rate"]);
-const NEED_HEADS=["팀","레벨","KPI명","측정유형","가드레일"];
+const NEED_HEADS=["팀","레벨","KPI명","측정유형"];
 function fromCSV(text){
   const t=parseCSV(text);
   if(t.length<2) throw new Error(
